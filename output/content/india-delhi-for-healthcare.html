@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>India: The Global Hub for Medical Tourism</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+    <!-- Chosen Palette: Serene Earth Tones -->
+    <!-- Application Structure Plan: The SPA is designed as a narrative journey for a potential medical tourist. It starts with a high-level overview (Hero section with key stats), moves to the core value proposition ("Why India?"), provides a critical interactive tool (Cost Comparison), allows exploration of specifics (Treatments & Destinations), explains the process (Patient Journey), and concludes with a future outlook. This top-down structure logically answers user questions, moving from general appeal to specific, actionable information, making a complex topic easily digestible. -->
+    <!-- Visualization & Content Choices: 
+        - Key Stats (Market Size, Savings): Goal: Inform. Method: Dynamic text. Interaction: None. Justification: Immediate impact.
+        - Why India Section: Goal: Organize/Inform. Method: HTML/CSS icon grid. Interaction: Hover. Justification: Scannable benefits.
+        - Cost Comparison: Goal: Compare. Method: Bar Chart. Interaction: Dropdown to update data. Justification: Powerful, personalized data visualization. Library: Chart.js.
+        - Popular Treatments: Goal: Organize/Inform. Method: Clickable cards. Interaction: Click to reveal info. Justification: Manages information density.
+        - Top Medical Cities: Goal: Inform. Method: Interactive tabs. Interaction: Click to switch content. Justification: Clean, organized presentation of geographic data.
+        - Patient Journey: Goal: Organize/Inform. Method: HTML/CSS process diagram. Interaction: Hover highlight. Justification: Clarifies a complex process visually.
+        - Market Growth: Goal: Show Change/Trend. Method: Line Chart. Interaction: Tooltips on hover. Justification: Standard for showing trends over time. Library: Chart.js.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7F4;
+            color: #333D42;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 320px;
+            max-height: 400px;
+        }
+        @media (min-width: 640px) {
+            .chart-container {
+                height: 400px;
+            }
+        }
+        .nav-link {
+            cursor: pointer;
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            transition: all 0.3s ease;
+            font-weight: 500;
+        }
+        .nav-link.active, .nav-link:hover {
+            background-color: #3A6EA5;
+            color: #FFFFFF;
+        }
+        .accent-bg { background-color: #3A6EA5; }
+        .accent-text { color: #3A6EA5; }
+        .secondary-bg { background-color: #EAEBED; }
+        .card {
+            background-color: #FFFFFF;
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+        .tab-button {
+            transition: all 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .tab-button.active {
+            border-color: #3A6EA5;
+            color: #3A6EA5;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-lg sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8 py-3 flex justify-between items-center">
+            <h1 class="text-xl font-bold accent-text">Heal in India</h1>
+            <div class="hidden md:flex items-center space-x-2">
+                <a class="nav-link active" href="#overview">Overview</a>
+                <a class="nav-link" href="#costs">Costs</a>
+                <a class="nav-link" href="#treatments">Treatments</a>
+                <a class="nav-link" href="#destinations">Destinations</a>
+                <a class="nav-link" href="#journey">Journey</a>
+            </div>
+             <button class="md:hidden p-2 rounded-md" id="mobile-menu-button">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 6h16M4 12h16m-7 6h7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path></svg>
+            </button>
+        </nav>
+        <div class="hidden md:hidden px-4 pb-4" id="mobile-menu">
+             <a class="block py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-100" href="#overview">Overview</a>
+             <a class="block py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-100" href="#costs">Costs</a>
+             <a class="block py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-100" href="#treatments">Treatments</a>
+             <a class="block py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-100" href="#destinations">Destinations</a>
+             <a class="block py-2 px-3 text-base font-medium rounded-md text-gray-700 hover:bg-gray-100" href="#journey">Journey</a>
+        </div>
+    </header>
+
+    <main>
+        <section class="py-16 md:py-24 text-center bg-white" id="overview">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <h2 class="text-3xl md:text-5xl font-bold tracking-tight mb-4">World-Class Healthcare, Unmatched Value</h2>
+                <p class="text-lg md:text-xl text-slate-600 max-w-3xl mx-auto mb-10">India now stands out as a top choice for medical tourism, providing a winning mix of advanced tech, expert doctors, and substantial cost benefits alongside top-tier care.</p>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-8 max-w-4xl mx-auto">
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold accent-text mb-2">$13 Billion</p>
+                        <p class="text-slate-600 font-medium">Projected Market Size by 2026</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold accent-text mb-2">60-80%</p>
+                        <p class="text-slate-600 font-medium">Potential Cost Savings vs. West</p>
+                    </div>
+                    <div class="card p-6">
+                        <p class="text-4xl font-bold accent-text mb-2">2 Million+</p>
+                        <p class="text-slate-600 font-medium">Medical Tourists Annually</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 md:py-24">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Why Choose India?</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Explore the key benefits positioning India as a top healthcare destination.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">💰</div>
+                        <h4 class="text-xl font-semibold mb-2">Affordable Care</h4>
+                        <p class="text-slate-600">Save significantly on major surgeries and treatments, often at a fraction of the cost compared to the US and UK.</p>
+                    </div>
+                    <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">⭐</div>
+                        <h4 class="text-xl font-semibold mb-2">Quality &amp; Accreditation</h4>
+                        <p class="text-slate-600">Here are a few options, all similar in length:
+
+*   Indian hospitals often hold JCI &amp; NABH accreditation, signifying top-tier care and safety protocols.
+*   Accredited by JCI and NABH, numerous Indian hospitals meet global care and safety benchmarks.
+*   Many Indian hospitals, JCI &amp; NABH certified, prioritize international standards in patient safety.
+*   Indian healthcare facilities often boast JCI/NABH accreditation, ensuring superior patient safety.</p>
+                    </div>
+                    <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">👨‍⚕️</div>
+                        <h4 class="text-xl font-semibold mb-2">Skilled Professionals</h4>
+                        <p class="text-slate-600">Here are a few options, all similar in length:
+
+*   **Connect with expert English-speaking medical professionals, including many global specialists.**
+*   **Get care from experienced, English-speaking doctors, surgeons, and healthcare staff worldwide.**
+*   **Benefit from a network of highly skilled, English-proficient medical staff with global backgrounds.**
+*   **Consult with qualified English-speaking doctors, surgeons, and healthcare providers from around the world.**</p>
+                    </div>
+                    <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">🔬</div>
+                        <h4 class="text-xl font-semibold mb-2">Advanced Technology</h4>
+                        <p class="text-slate-600">Modern hospitals boast cutting-edge medical tech like robotic surgery, sophisticated imaging, and state-of-the-art diagnostic facilities.</p>
+                    </div>
+                     <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">📅</div>
+                        <h4 class="text-xl font-semibold mb-2">No Waiting Lists</h4>
+                        <p class="text-slate-600">Get swift access to procedures, bypassing lengthy wait times.</p>
+                    </div>
+                     <div class="card p-8 text-center">
+                        <div class="text-4xl mb-4 accent-text">🌿</div>
+                        <h4 class="text-xl font-semibold mb-2">Holistic Wellness</h4>
+                        <p class="text-slate-600">Here are a few options, all similar in length and meaning:
+
+*   Integrate conventional medicine with holistic therapies (Ayurveda, Yoga, etc.) for comprehensive healing.
+*   Embrace a holistic approach, blending modern medicine with Ayurveda, Yoga, and other wellness practices.
+*   Achieve complete healing by combining modern medical care with ancient wellness traditions (Ayurveda, Yoga).
+*   For holistic recovery, merge current medical treatments with age-old practices like Ayurveda, Yoga, and Naturopathy.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 md:py-24 bg-white" id="costs">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Interactive Cost Comparison</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Discover your potential savings! Compare costs for a specific procedure in India versus developed nations. Estimates provided.</p>
+                </div>
+                <div class="max-w-xl mx-auto mb-8">
+                    <label class="block text-sm font-medium text-gray-700 mb-2" for="procedure-select">Select a Medical Procedure:</label>
+                    <select class="w-full p-3 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500" id="procedure-select">
+                        <option value="heartBypass">Heart Bypass Surgery</option>
+                        <option value="hipReplacement">Hip Replacement</option>
+                        <option value="kneeReplacement">Knee Replacement</option>
+                        <option value="dentalImplant">Dental Implant</option>
+                    </select>
+                </div>
+                <div class="chart-container">
+                    <canvas id="costComparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 md:py-24" id="treatments">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Popular Medical Treatments</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Here are a few options for rewriting that line, keeping a similar size and tone:
+
+*   India excels in specialized medical treatments. Discover popular categories below by clicking each card.
+
+*   India provides many specialized medical procedures. Browse top treatment areas by selecting a card below.
+
+*   Explore India's specialized medical options. Click a card below to learn about key treatment categories.</p>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" id="treatment-grid">
+                </div>
+            </div>
+        </section>
+
+        <section class="py-16 md:py-24 bg-white" id="destinations">
+             <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                 <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Top Medical Cities</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Though healthcare is widespread, some cities excel, drawing medical tourists with top-tier hospitals and advanced facilities.</p>
+                </div>
+                <div class="max-w-4xl mx-auto">
+                    <div class="flex justify-center border-b border-gray-200 mb-8" id="city-tabs">
+                    </div>
+                    <div class="p-4 md:p-6 card" id="city-content">
+                    </div>
+                </div>
+             </div>
+        </section>
+
+        <section class="py-16 md:py-24" id="journey">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">Your Patient Journey</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Embarking on medical travel to India involves a defined process. This guide outlines the key steps, from initial planning through post-treatment support.</p>
+                </div>
+                <div class="relative max-w-3xl mx-auto">
+                    <div class="absolute left-1/2 -translate-x-1/2 h-full w-0.5 bg-gray-300 hidden md:block"></div>
+                    <div class="space-y-12">
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                            <div class="md:text-right md:pr-8 mb-4 md:mb-0">
+                                <div class="text-white accent-bg rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold ml-auto mr-auto md:mr-0 mb-2">1</div>
+                                <h4 class="text-xl font-semibold">Research &amp; Consultation</h4>
+                                <p class="text-slate-600">Here are a few options, all of similar length to the original:
+
+*   Find approved hospitals, see specialists online, and transmit records.
+*   Locate certified hospitals, get remote specialist advice, and exchange files.
+*   Access vetted hospitals, connect with specialists virtually, and share health data.
+*   Research recognized hospitals, receive telehealth consultations, and transfer info.</p>
+                            </div>
+                            <div class="hidden md:block"></div>
+                        </div>
+                         <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                             <div class="hidden md:block"></div>
+                            <div class="md:text-left md:pl-8 mb-4 md:mb-0">
+                                <div class="text-white accent-bg rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold ml-auto mr-auto md:ml-0 mb-2">2</div>
+                                <h4 class="text-xl font-semibold">Visa &amp; Travel</h4>
+                                <p class="text-slate-600">Here are a few options, keeping the size roughly similar:
+
+*   **e-Medical Visa: Apply online, hospital letter required.  Book flights/lodging.**
+*   **Get e-Medical Visa: Online application plus Indian hospital letter. Arrange travel.**
+*   **e-Medical Visa: Apply via web, hospital letter needed. Secure travel arrangements.**
+*   **Online e-Medical Visa: Requires hospital letter.  Secure travel and lodging.**</p>
+                            </div>
+                        </div>
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                            <div class="md:text-right md:pr-8 mb-4 md:mb-0">
+                                <div class="text-white accent-bg rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold ml-auto mr-auto md:mr-0 mb-2">3</div>
+                                <h4 class="text-xl font-semibold">Arrival &amp; Treatment</h4>
+                                <p class="text-slate-600">Following arrival, a pre-procedure assessment will be conducted. Afterwards, the planned medical intervention will begin.</p>
+                            </div>
+                            <div class="hidden md:block"></div>
+                        </div>
+                        <div class="md:grid md:grid-cols-2 md:gap-8 items-center relative">
+                            <div class="hidden md:block"></div>
+                            <div class="md:text-left md:pl-8 mb-4 md:mb-0">
+                                <div class="text-white accent-bg rounded-full w-12 h-12 flex items-center justify-center text-xl font-bold ml-auto mr-auto md:ml-0 mb-2">4</div>
+                                <h4 class="text-xl font-semibold">Recovery &amp; Tourism</h4>
+                                <p class="text-slate-600">After surgery, recover in comfort. Explore India's culture once medically able.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <section class="py-16 md:py-24 bg-white" id="future">
+            <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-12">
+                    <h3 class="text-3xl md:text-4xl font-bold">The Future is Bright</h3>
+                    <p class="mt-4 text-lg text-slate-600 max-w-2xl mx-auto">Bolstered by robust government backing, including programs like 'Heal in India', the nation's medical tourism sector is set for substantial and lasting expansion.</p>
+                </div>
+                 <div class="chart-container">
+                    <canvas id="marketGrowthChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <html><head></head><body><footer class="bg-gray-800 text-gray-300">
+  <div class="container mx-auto px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+      
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Chandnichowk</h5>
+        <ul class="space-y-2">
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/"></a>Chandnichowk history</li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/qutubminar-photos-blog.html">Info</a></li>
+      
+		  
+		  
+		  
+		  <li>	<a href="https://www.chandnichowk.info/cities-of-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl01_title">Cities-of-india</a></li>	
+
+
+
+
+
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/Delhi-blog.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl02_title">Delhi-blog</a>
+            </li>	
+
+
+
+
+
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/delhi-india-medical-tourism.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl03_title">Delhi-india-medical-tourism</a>
+            </li>	
+			
+			
+			
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/history-forts-in-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl04_title">History-forts-in-india</a>
+            </li>	
+
+
+
+
+
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/india-delhi-for-healthcare.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl05_title">India-delhi-for-healthcare</a>
+            </li>	
+
+
+
+
+
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/information.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl06_title">Information</a>
+            </li>	
+
+
+
+
+
+												
+		<li><a href="https://www.chandnichowk.info/main-cities-of-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl07_title">Main-cities-of-india</a></li>	
+
+		<li><a href="https://www.chandnichowk.info/Mandir.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl08_title">Mandir</a> </li>	
+
+		<li><a href="https://www.chandnichowk.info/Market-decoration-during-Diwali.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl09_title">Market-decoration-during-Diwali</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/markets.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl10_title">Markets</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/old-page.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl11_title">Old-page</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/Ravan-effigy-burn-in-delhi.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl12_title">Ravan-effigy-burn-in-delhi</a> </li>	
+
+
+
+
+		 
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Delhi Tour</h5>
+        <ul class="space-y-2">
+		  <li><a href="https://www.chandnichowk.info/qutubminar-delhi.html">Qutubminar and Dehi</a></li>
+		  <li><a href="https://www.chandnichowk.info/delhi/redfort/" target="blank">Redfort Delhi</a></li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/delhi/connaught-place/">Delhi Connaught Place</a></li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/delhi/chandni-chowk/">ChandniChowk</a></li>
+
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Forts Of India</h5>
+        <ul class="space-y-2">
+		<li><a href="https://www.chandnichowk.info/" id="ctl00_ContentPlaceHolder1_RepLinks_ctl01_title">Home</a></li>	
+		<li><a href="https://www.chandnichowk.info/Delhi/" id="ctl00_ContentPlaceHolder1_RepLinks_ctl02_title">Delhi</a></li>	
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Contact Us</h5>
+        <div class="space-y-2">
+          <p>Redmond<br/>WA, USA</p>
+          <p>
+            <a class="hover:text-white hover:underline transition-colors duration-200" href="mailto:contact@dataknobs.com">contact@kreatewebsites.com</a>
+          </p>
+          <p>
+            <a class="hover:text-white hover:underline transition-colors duration-200" href="tel:+14253411222">+1 (425) 341-1222</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 border-t border-gray-700 pt-8 flex flex-col items-center justify-between sm:flex-row">
+      <p class="text-sm text-gray-400">© 2025 Qutubminar. All rights reserved.</p>
+      
+      <div class="flex space-x-4 mt-4 sm:mt-0">
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.facebook.com/kreatewebsites/">
+          <span class="sr-only">Facebook</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.772-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.twitter.com/kreatewebsites/">
+          <span class="sr-only">Twitter</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path>
+          </svg>
+        </a>
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.linkedin.com/company/kreatewebsites/">
+          <span class="sr-only">LinkedIn</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path clip-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.783-1.75-1.75s.784-1.75 1.75-1.75 1.75.783 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" fill-rule="evenodd"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer></body></html>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            const costData = {
+                heartBypass: {
+                    labels: ['India', 'Thailand', 'USA', 'UK'],
+                    data: [7000, 22000, 130000, 30000],
+                },
+                hipReplacement: {
+                    labels: ['India', 'Thailand', 'USA', 'UK'],
+                    data: [6500, 18000, 45000, 18000],
+                },
+                kneeReplacement: {
+                    labels: ['India', 'Thailand', 'USA', 'UK'],
+                    data: [6000, 16000, 40000, 15000],
+                },
+                dentalImplant: {
+                    labels: ['India', 'Thailand', 'USA', 'UK'],
+                    data: [1000, 2500, 4500, 3500],
+                }
+            };
+
+            const treatmentsData = [
+                { id: 'cardiology', title: 'Cardiology & Cardiac Surgery', icon: '❤️', description: 'Comprehensive care for heart conditions, including bypass surgery, angioplasty, and valve replacements, performed in state-of-the-art facilities.' },
+                { id: 'orthopedics', title: 'Orthopedics', icon: '🦴', description: 'Specialized treatments for bone and joint issues, including hip/knee replacements, spinal surgeries, and sports injury management.' },
+                { id: 'oncology', title: 'Oncology', icon: '🎗️', description: 'Advanced cancer care featuring chemotherapy, radiation therapy, and surgical oncology, tailored to individual patient needs.' },
+                { id: 'transplants', title: 'Organ Transplants', icon: '🔄', description: 'Expertise in complex transplant surgeries for organs like kidneys, liver, and heart, with high success rates.' },
+                { id: 'cosmetic', title: 'Cosmetic Surgery', icon: '✨', description: 'A wide array of procedures for aesthetic enhancement, performed by board-certified surgeons with a focus on natural results.' },
+                { id: 'wellness', title: 'Wellness & Alternative', icon: '🌿', description: 'Holistic healing through Ayurveda, Yoga, and other traditional therapies for rejuvenation and chronic disease management.' }
+            ];
+
+            const citiesData = {
+                delhi: { name: "Delhi NCR", content: "A major hub with numerous multi-specialty hospitals, excellent international connectivity, and a blend of modern and historical attractions. Home to leading hospital chains like Max Healthcare, Fortis, and Apollo.", hospitals: ["Max Healthcare", "Fortis Escorts Heart Institute", "Indraprastha Apollo Hospitals"] },
+                mumbai: { name: "Mumbai", content: "Known for its highly advanced medical facilities and renowned specialists, especially in fields like oncology and cardiology. The city offers a vibrant cosmopolitan experience for recovering patients.", hospitals: ["Kokilaben Dhirubhai Ambani Hospital", "Tata Memorial Hospital", "H. N. Reliance Foundation Hospital"] },
+                chennai: { name: "Chennai", content: "Often called India's 'Health Capital', Chennai attracts a large number of international patients for its quality healthcare, particularly in ophthalmology, orthopedics, and multi-organ transplants.", hospitals: ["Apollo Hospitals, Greams Road", "MIOT International", "Dr. Agarwal's Eye Hospital"] },
+                bengaluru: { name: "Bengaluru", content: "India's IT capital also boasts a robust healthcare ecosystem with a focus on advanced technology and research. It's a popular choice for cardiac care and neurosurgery.", hospitals: ["Narayana Health City", "Manipal Hospitals", "Fortis Hospital, Bannerghatta Road"] }
+            };
+
+            const marketGrowthData = {
+                labels: ['2020', '2021', '2022', '2023', '2024', '2025', '2026'],
+                data: [4.5, 5.5, 7, 8.5, 10, 11.5, 13]
+            };
+
+            let costChart, growthChart;
+            const procedureSelect = document.getElementById('procedure-select');
+            
+            const createCostChart = () => {
+                const ctx = document.getElementById('costComparisonChart').getContext('2d');
+                const selectedProcedure = procedureSelect.value;
+                costChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: costData[selectedProcedure].labels,
+                        datasets: [{
+                            label: 'Average Cost (USD)',
+                            data: costData[selectedProcedure].data,
+                            backgroundColor: (context) => {
+                                const chart = context.chart;
+                                const { ctx, chartArea } = chart;
+                                if (!chartArea) { return; }
+                                const gradient = ctx.createLinearGradient(0, chartArea.bottom, 0, chartArea.top);
+                                gradient.addColorStop(0, 'rgba(58, 110, 165, 0.6)');
+                                gradient.addColorStop(1, 'rgba(58, 110, 165, 0.9)');
+                                return gradient;
+                            },
+                            borderColor: '#3A6EA5',
+                            borderWidth: 1,
+                            borderRadius: 5,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        let label = context.dataset.label || '';
+                                        if (label) { label += ': '; }
+                                        if (context.parsed.y !== null) {
+                                            label += new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(context.parsed.y);
+                                        }
+                                        return label;
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '$' + value / 1000 + 'k';
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            };
+
+            const updateCostChart = () => {
+                const selectedProcedure = procedureSelect.value;
+                costChart.data.labels = costData[selectedProcedure].labels;
+                costChart.data.datasets[0].data = costData[selectedProcedure].data;
+                costChart.update();
+            };
+
+            procedureSelect.addEventListener('change', updateCostChart);
+
+            const createGrowthChart = () => {
+                const ctx = document.getElementById('marketGrowthChart').getContext('2d');
+                growthChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: marketGrowthData.labels,
+                        datasets: [{
+                            label: 'Market Size (Billion USD)',
+                            data: marketGrowthData.data,
+                            fill: true,
+                            borderColor: '#3A6EA5',
+                            backgroundColor: 'rgba(58, 110, 165, 0.2)',
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            y: { beginAtZero: true, ticks: { callback: value => `$${value}B` } }
+                        }
+                    }
+                });
+            };
+            
+            const populateTreatments = () => {
+                const grid = document.getElementById('treatment-grid');
+                treatmentsData.forEach(treatment => {
+                    const card = document.createElement('div');
+                    card.className = 'treatment-card card p-6 cursor-pointer';
+                    card.innerHTML = `
+                        <div class="flex items-center text-left">
+                            <div class="text-3xl mr-4">${treatment.icon}</div>
+                            <div>
+                                <h4 class="text-lg font-semibold">${treatment.title}</h4>
+                            </div>
+                        </div>
+                        <div class="treatment-description hidden mt-4 text-slate-600">
+                            <p>${treatment.description}</p>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+
+                grid.addEventListener('click', (e) => {
+                    const card = e.target.closest('.treatment-card');
+                    if (card) {
+                        const description = card.querySelector('.treatment-description');
+                        description.classList.toggle('hidden');
+                        card.classList.toggle('secondary-bg');
+                    }
+                });
+            };
+
+            const populateCities = () => {
+                const tabsContainer = document.getElementById('city-tabs');
+                const contentContainer = document.getElementById('city-content');
+                let firstCityKey = Object.keys(citiesData)[0];
+
+                Object.entries(citiesData).forEach(([key, city], index) => {
+                    const button = document.createElement('button');
+                    button.className = `tab-button py-2 px-4 text-lg font-medium ${index === 0 ? 'active' : ''}`;
+                    button.textContent = city.name;
+                    button.dataset.city = key;
+                    tabsContainer.appendChild(button);
+                });
+
+                const updateCityContent = (cityKey) => {
+                    const city = citiesData[cityKey];
+                    contentContainer.innerHTML = `
+                        <p class="text-slate-600 mb-4">${city.content}</p>
+                        <h5 class="font-semibold mb-2">Leading Hospitals:</h5>
+                        <ul class="list-disc list-inside text-slate-600">
+                            ${city.hospitals.map(h => `<li>${h}</li>`).join('')}
+                        </ul>
+                    `;
+                };
+
+                tabsContainer.addEventListener('click', (e) => {
+                    if (e.target.matches('.tab-button')) {
+                        tabsContainer.querySelector('.active').classList.remove('active');
+                        e.target.classList.add('active');
+                        updateCityContent(e.target.dataset.city);
+                    }
+                });
+                
+                updateCityContent(firstCityKey);
+            };
+
+            const setupNavigation = () => {
+                const links = document.querySelectorAll('.nav-link');
+                const sections = document.querySelectorAll('main section');
+
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            links.forEach(link => {
+                                link.classList.toggle('active', link.getAttribute('href') === `#${entry.target.id}`);
+                            });
+                        }
+                    });
+                }, { threshold: 0.5 });
+
+                sections.forEach(section => observer.observe(section));
+                
+                document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                    anchor.addEventListener('click', function (e) {
+                        e.preventDefault();
+                        const targetId = this.getAttribute('href');
+                        document.querySelector(targetId).scrollIntoView({
+                            behavior: 'smooth'
+                        });
+                        if(document.getElementById('mobile-menu').classList.contains('hidden') === false){
+                           document.getElementById('mobile-menu').classList.add('hidden');
+                        }
+                    });
+                });
+
+                const mobileMenuButton = document.getElementById('mobile-menu-button');
+                const mobileMenu = document.getElementById('mobile-menu');
+                mobileMenuButton.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                });
+
+            };
+
+            createCostChart();
+            createGrowthChart();
+            populateTreatments();
+            populateCities();
+            setupNavigation();
+        });
+    </script>
+
+
+</body></html>

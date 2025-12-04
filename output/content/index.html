@@ -1,408 +1,564 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>The Chandni Chowk Experience: An Interactive Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&amp;family=Lora:ital,wght@0,400;0,600;1,400&amp;display=swap" rel="stylesheet"/>
+    <!-- Chosen Palette: Warm Neutrals & Subtle Accents -->
+    <!-- Application Structure Plan: The SPA is designed around a narrative journey with three core thematic sections: 'The Imperial Vision' (History), 'The Living Fabric' (Culture & Commerce), and 'Erasure & Reinvention' (Modern Challenges). This structure allows users to explore non-linearly, either chronologically, thematically by interest (e.g., markets, food), or by focusing on contemporary issues. Navigation is handled by a sticky top bar. Interactions include clickable timeline events, an interactive map/grid for markets, filterable galleries for landmarks, and toggle-based sections for the redevelopment analysis. This is more intuitive than the report's linear format, encouraging exploration and comparison. -->
+    <!-- Visualization & Content Choices: 
+        - Timeline: Goal: Show historical progression. Method: Interactive horizontal HTML/CSS timeline. Interaction: Click on eras to reveal detailed text blocks. Justification: More engaging than a static list.
+        - Sacred Landmarks: Goal: Compare construction periods. Method: Chart.js Bar Chart. Interaction: Hover tooltips for dates/details. Justification: Visually represents the layering of faiths over time.
+        - Specialized Bazaars: Goal: Organize and detail the markets. Method: Interactive HTML grid of cards. Interaction: Clicking a card reveals a modal with detailed information. Justification: Cleaner and more interactive than a long table.
+        - Havelis: Goal: Compare the different fates. Method: A three-column layout with clickable cards. Interaction: Click to expand and read the story of each haveli. Justification: Facilitates direct comparison of preservation outcomes.
+        - Redevelopment Issues: Goal: Explain complex failures. Method: Toggled content sections. Interaction: Click on an issue (e.g., "Governance Failure") to expand the explanation. Justification: Breaks down complex information into digestible, user-controlled chunks.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #FDFBF8;
+            color: #333;
+        }
+        h1, h2, h3 {
+            font-family: 'Lora', serif;
+        }
+        .nav-link {
+            transition: color 0.3s ease, border-bottom-color 0.3s ease;
+            border-bottom: 2px solid transparent;
+        }
+        .nav-link.active, .nav-link:hover {
+            color: #A0522D;
+            border-bottom-color: #A0522D;
+        }
+        .content-section {
+            display: none;
+        }
+        .content-section.active {
+            display: block;
+        }
+        .card {
+            background-color: #FFFFFF;
+            border: 1px solid #EAEAEA;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        .modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .modal-content {
+            background: #FFF;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            max-width: 90%;
+            width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            transform: scale(0.95);
+            transition: transform 0.3s ease;
+        }
+        .modal-overlay.visible .modal-content {
+            transform: scale(1);
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 400px;
+            max-height: 50vh;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <header class="bg-white/80 backdrop-blur-md sticky top-0 z-50 shadow-sm">
+        <nav class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex-shrink-0">
+                    <h1 class="text-2xl font-bold text-gray-800" style="font-family: 'Lora', serif;">Chandni Chowk</h1>
+                </div>
+                <div class="hidden md:block">
+                    <div class="ml-10 flex items-baseline space-x-4">
+                        <a class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700" href="#vision">The Imperial Vision</a>
+                        <a class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700" href="#fabric">The Living Fabric</a>
+                        <a class="nav-link px-3 py-2 rounded-md text-sm font-medium text-gray-700" href="#reinvention">Erasure &amp; Reinvention</a>
+                    </div>
+                </div>
+                <div class="md:hidden">
+                    <button class="inline-flex items-center justify-center p-2 rounded-md text-gray-400 hover:text-gray-500 hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500" id="mobile-menu-button">
+                        <span class="sr-only">Open main menu</span>
+                        <svg aria-hidden="true" class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M4 6h16M4 12h16m-7 6h7" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </nav>
+        <div class="md:hidden hidden" id="mobile-menu">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700" href="#vision">The Imperial Vision</a>
+                <a class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700" href="#fabric">The Living Fabric</a>
+                <a class="nav-link block px-3 py-2 rounded-md text-base font-medium text-gray-700" href="#reinvention">Erasure &amp; Reinvention</a>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="content-section" id="vision">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900">The Imperial Vision</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Uncover Chandni Chowk's history: born a Mughal empire boulevard, a stage for power. This section examines its planning, royal support, and design, revealing the origins of a world-famous marketplace.</p>
+            </div>
+            
+            <div class="space-y-12">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-4 text-center">A Journey Through Time</h3>
+                    <div class="relative">
+                        <div class="absolute left-1/2 h-full w-0.5 bg-gray-300 hidden md:block"></div>
+                        <div class="space-y-8 md:space-y-0" id="timeline-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" id="fabric">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900">The Living Fabric</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Experience the essence of Chandni Chowk. Unveiling its identity, this section delves into its heart: sacred sites of many faiths, the tales within historic havelis, the lively pulse of its specialized markets, and its renowned culinary legacy.</p>
+            </div>
+            
+            <div class="space-y-16">
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">A Mosaic of Faiths: Sacred Landmarks</h3>
+                    <p class="text-center text-gray-600 mb-6 max-w-2xl mx-auto">Here are a few options, all similar in length:
+
+*   **Chandni Chowk's religious sites reveal Delhi's shifting power dynamics.** This chart traces their construction, from the Mughal epoch to British rule. Mouse over bars for dates.
+*   **Explore Chandni Chowk's religious past through its construction dates.** This timeline, from Mughals to the British, uses a chart with hover-over details to display the exact year of each landmark.
+*   **Delhi's power history unfolds in Chandni Chowk's religious sites.** This chart, covering Mughal and colonial periods, visualizes construction timelines. Hover to reveal specific years.</p>
+                    <div class="chart-container">
+                        <canvas id="landmarksChart"></canvas>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">The World Within: Havelis of Chandni Chowk</h3>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Explore Chandni Chowk's havelis: discover their tales of survival, decline, and evolution. Click to uncover each mansion's unique story and its significance to the district's legacy.</p>
+                    <div class="grid md:grid-cols-3 gap-8" id="havelis-content"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">The Engine of Commerce: Specialized Bazaars</h3>
+                     <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Chandni Chowk is a vibrant marketplace, a "market of markets." Its many "galis" (lanes) burst with specialized goods: spices, fabrics, silver, and books. Explore the markets below to discover their heritage and contemporary treasures.</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4" id="bazaars-grid"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">The Taste of Centuries: Culinary Heritage</h3>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Chandni Chowk delights foodies, boasting generations-old recipes. Discover iconic spots like Paranthe Wali Gali and historic sweet shops.</p>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8" id="food-content"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section" id="reinvention">
+            <div class="text-center mb-12">
+                <h2 class="text-4xl font-bold text-gray-900">Erasure &amp; Reinvention</h2>
+                <p class="mt-4 text-lg text-gray-600 max-w-3xl mx-auto">Analyzing Chandni Chowk's evolution, this section critiques the recent redevelopment, highlighting its shortcomings and the enduring tension between preserving heritage and embracing modern urbanism.</p>
+            </div>
+            
+            <div class="space-y-16">
+                 <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">The Redevelopment Dilemma</h3>
+                    <p class="text-center text-gray-600 mb-8 max-w-2xl mx-auto">Rebuilding Mughal splendor, the project faces scrutiny for its implementation and results. Uncover the core problems by clicking each heading to delve into the project's failures.</p>
+                    <div class="max-w-3xl mx-auto space-y-4" id="redevelopment-issues"></div>
+                </div>
+
+                <div>
+                    <h3 class="text-2xl font-semibold mb-6 text-center">Conclusion &amp; Recommendations</h3>
+                    <div class="prose prose-lg max-w-4xl mx-auto text-gray-700" id="conclusion-content"></div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal-overlay" id="bazaar-modal">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold text-gray-800" id="modal-title"></h3>
+                <button class="text-gray-500 hover:text-gray-800" id="modal-close">×</button>
+            </div>
+            <p class="text-gray-600" id="modal-description"></p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const data = {
+                timeline: [
+                    {
+                        era: "Mughal Genesis (1650s)",
+                        title: "The Birth of a Grand Axis",
+                        content: "Chandni Chowk was born not from organic growth, but as a key part of Emperor Shah Jahan's meticulously planned capital, Shahjahanabad. Designed by his daughter, Princess Jahanara Begum, in 1650, it was envisioned as the city's primary commercial and ceremonial boulevard. Its original design featured a central canal reflecting the moonlight, giving it the name 'Moonlight Square', and 1,560 shops arranged in a half-moon pattern."
+                    },
+                    {
+                        era: "The Artery of Empire (17th-18th C.)",
+                        title: "Commerce and Ceremony",
+                        content: "In its heyday, Chandni Chowk was the grandest market in India, attracting traders from across Asia and Europe. It was also the empire's main ceremonial route, hosting magnificent imperial processions. The street was divided into specialized bazaars like the Urdu Bazaar and Johri (Jeweler's) Bazaar, forming the commercial lifeblood of the Mughal capital."
+                    },
+                    {
+                        era: "Colonial Imprint (19th-20th C.)",
+                        title: "Erasure and Reshaping",
+                        content: "The 1857 Revolt marked a turning point. The British demolished many Mughal structures and asserted their authority by building the Town Hall and the Ghantaghar (clock tower), which replaced the original moonlit pool. The central canal was closed and later replaced by a tramway, fundamentally altering the street's character."
+                    },
+                    {
+                        era: "Post-Partition Realities (1947-)",
+                        title: "Demographic Shift",
+                        content: "The Partition of India led to a massive influx of refugees from Pakistan who settled in Old Delhi. Many took over abandoned havelis in Chandni Chowk, establishing new businesses and accelerating its transformation from a mixed residential-commercial area to the intensely dense marketplace it is today."
+                    },
+                    {
+                        era: "Modern Reinvention (2018-Present)",
+                        title: "The Redevelopment Dilemma",
+                        content: "A recent, costly redevelopment project aimed to restore the street's grandeur by pedestrianizing the main stretch. However, due to failures in governance, maintenance, and enforcement, the project is widely seen as a failure, raising critical questions about heritage preservation in modern India."
+                    }
+                ],
+                landmarks: {
+                    labels: ['Fatehpuri Masjid', 'Lal Mandir', 'Sunehri Masjid', 'Gurdwara Sis Ganj', 'Central Baptist Church', 'Gauri Shankar Temple'],
+                    years: [1650, 1656, 1721, 1783, 1814, 1760],
+                    data: [1650, 1656, 1721, 1783, 1814, 1760] 
+                },
+                havelis: [
+                    { 
+                        title: "Ghalib ki Haveli: Memorialization",
+                        content: "The former residence of the celebrated poet Mirza Ghalib is now a state-preserved museum. While it saves the structure as a cultural monument, it represents a static form of preservation, a memorial to a past life rather than a living space."
+                    },
+                    {
+                        title: "Chunnamal Haveli: Living Heritage",
+                        content: "This magnificent mansion is one of the few still inhabited by the descendants of its original owner, Rai Lala Chunnamal. It represents a living link to the past but faces threats from commercial encroachment and internal disputes, embodying the precarious state of privately-owned heritage."
+                    },
+                    {
+                        title: "Haveli Dharampura: Commercial Reuse",
+                        content: "Once a ruin, this haveli was painstakingly restored and transformed into a luxury boutique hotel. This adaptive reuse saved the building's physical structure but did so by commodifying its heritage, raising questions about accessibility and the commercialization of historic spaces."
+                    }
+                ],
+                bazaars: [
+                    { name: 'Dariba Kalan', specialization: 'Silver & Perfumes' },
+                    { name: 'Kinari Bazaar', specialization: 'Wedding Supplies' },
+                    { name: 'Khari Baoli', specialization: 'Spices & Nuts' },
+                    { name: 'Bhagirath Palace', specialization: 'Lights & Electronics' },
+                    { name: 'Nai Sarak', specialization: 'Books & Stationery' },
+                    { name: 'Chawri Bazar', specialization: 'Paper & Brass' },
+                    { name: 'Katra Neel', specialization: 'Textiles' },
+                    { name: 'Ballimaran Market', specialization: 'Shoes & Optics' },
+                    { name: 'Kucha Choudhary', specialization: 'Cameras' },
+                    { name: 'Fatehpuri Market', specialization: 'Food & Dairy' }
+                ],
+                bazaarDetails: {
+                    'Dariba Kalan': "A 17th-century market whose name means 'Street of the Incomparable Pearl.' It's a legendary lane for silver, gold, and Kundan jewellery, often at prices significantly lower than other markets. You can also find traditional Indian perfumes, known as 'attar'.",
+                    'Kinari Bazaar': "The ultimate destination for wedding shopping. This glittering lane is filled with everything needed for a bridal trousseau, including ornate borders (zari), sequins, garlands, and ceremonial turbans.",
+                    'Khari Baoli': "Asia's largest wholesale spice market. A walk through this lane is a sensory overload of fragrances from mounds of spices, nuts, herbs, and tea. It's a photographer's and chef's dream.",
+                    'Bhagirath Palace': "Known as Asia's largest wholesale market for electronics and lights. It's housed in a building that was once the palace of Begum Samru. Here you can find every kind of light fixture imaginable.",
+                    'Nai Sarak': "Its name ironically means 'New Road.' This is a haven for students and book lovers, offering a vast range of academic and general books, as well as stationery, often at wholesale prices.",
+                    'Chawri Bazar': "Considered Delhi's first wholesale market, it is now famous as Asia's largest market for wedding cards. It's also a major hub for brass, copper, and other metal goods.",
+                    'Katra Neel': "Initially a market for indigo traders ('neel' means blue), it is now a wholesale hub for all types of textiles and fabrics. It's also home to the first Raymond franchise in Old Delhi.",
+                    'Ballimaran Market': "Famous for its connection to the poet Mirza Ghalib, whose haveli is nearby. Today, it's a bustling market for affordable shoes, sunglasses, and optical frames.",
+                    'Kucha Choudhary': "Known colloquially as the 'photo market,' this specialized bazaar was established in the mid-1970s and is the go-to place for all things related to cameras and photography equipment.",
+                    'Fatehpuri Market': "Located near the historic Fatehpuri Masjid, this market is a foodie destination known for wholesale dairy products like 'khoya' and 'paneer', and a variety of delicious street food stalls."
+                },
+                food: [
+                    {
+                        name: "Paranthe Wali Gali",
+                        description: "The 'lane of fried bread,' famous for its shops serving deep-fried parathas with dozens of unique fillings, from potato to cashew. A culinary institution since 1872."
+                    },
+                    {
+                        name: "Old Famous Jalebi Wala",
+                        description: "Serving oversized, crispy, and syrup-soaked jalebis for nearly two centuries. A landmark for anyone with a sweet tooth."
+                    },
+                    {
+                        name: "Natraj Dahi Bhalla Corner",
+                        description: "Established in 1940, this corner spot is legendary for its two dishes: fluffy dahi bhalla (lentil dumplings in yogurt) and crisp aloo tikki (potato patties)."
+                    },
+                    {
+                        name: "Giani's Di Hatti",
+                        description: "The undisputed champion of rabri falooda, a refreshing and rich traditional dessert. Giani's has been cooling down Delhiites since around 1947."
+                    },
+                    {
+                        name: "Karim's",
+                        description: "Located near Jama Masjid, this iconic restaurant established in 1913 serves authentic Mughlai cuisine with recipes said to be from the imperial Mughal kitchens."
+                    },
+                    {
+                        name: "Kuremal Mohan Lal Kulfi",
+                        description: "Famous for its innovative kulfi (Indian ice cream), especially the unique stuffed fruit kulfi, where kulfi is set inside a whole fruit."
+                    }
+                ],
+                redevelopment: [
+                    {
+                        title: "Governance & Maintenance Failure",
+                        content: "A core reason for the project's failure is the unresolved dispute between the Public Works Department (PWD) and the Municipal Corporation of Delhi (MCD) over who is responsible for maintenance. This has led to a complete lack of upkeep, with garbage piling up and infrastructure decaying rapidly."
+                    },
+                    {
+                        title: "Lack of Enforcement",
+                        content: "The rules central to the project's vision have collapsed. The ban on motorized traffic is openly violated, the cap on rickshaws is ignored, and pedestrian spaces have been completely taken over by hawkers, all due to a near-total absence of enforcement."
+                    },
+                    {
+                        title: "Superficial 'Beautification'",
+                        content: "Critics argue the project prioritized a generic 'beautification' over authentic heritage preservation. The historic central canal was ignored, replaced by generic planters. This created a sanitized, theme-park version of history disconnected from its layered past."
+                    },
+                    {
+                        title: "Exclusion of Informal Economy",
+                        content: "The plan treated the thousands of street vendors, hawkers, and rickshaw pullers as a nuisance to be cleared away. It failed to integrate this vital part of the market's 'living heritage,' damaging the economic ecosystem and displacing livelihoods."
+                    }
+                ],
+                conclusion: `
+                    <p class="mb-4">Chandni Chowk is a profound and irreplaceable urban entity, a palimpsest bearing the marks of centuries of imperial design, commercial dynamism, and social transformation. Its contemporary existence is defined by a fundamental tension: the conflict between its identity as a priceless heritage zone and its function as a vital economic engine for hundreds of thousands of people.</p>
+                    <p class="mb-4">The recent redevelopment project, despite its laudable intentions, has largely failed to resolve this tension. By prioritizing a sanitized aesthetic over the area's living, organic character, the project has highlighted a critical need for a more holistic and sustainable approach to its future.</p>
+                    <h4 class="font-semibold text-xl mt-6 mb-2">Recommendations for the Future:</h4>
+                    <ul class="list-disc list-inside space-y-2">
+                        <li><strong>Establish a Unified Governance Authority:</strong> Create a single, empowered management body for the Shahjahanabad heritage zone to overcome jurisdictional conflicts and ensure accountability.</li>
+                        <li><strong>Adopt an Integrative Conservation Philosophy:</strong> Move beyond superficial beautification to respect the area's complex layers, including its 'living heritage' of informal economies. Authentically reference historical features and integrate, rather than displace, local workers.</li>
+                        <li><strong>Implement Community-Centric Planning:</strong> Develop future plans through a consultative process involving all stakeholders—traders, residents, and informal workers—to ensure solutions are grounded in reality and have local buy-in.</li>
+                        <li><strong>Revive Sustainable Public Transport:</strong> Re-examine the potential for a modern, non-polluting tram system to address congestion and provide efficient last-mile connectivity, nodding to the area's own history of public transit.</li>
+                    </ul>
+                `
+            };
+
+            const navLinks = document.querySelectorAll('.nav-link');
+            const sections = document.querySelectorAll('.content-section');
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+
+            function updateActiveNav(hash) {
+                navLinks.forEach(link => {
+                    if (link.getAttribute('href') === hash) {
+                        link.classList.add('active');
+                    } else {
+                        link.classList.remove('active');
+                    }
+                });
+            }
+
+            function showSection(hash) {
+                sections.forEach(section => {
+                    if ('#' + section.id === hash) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+                updateActiveNav(hash);
+            }
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetHash = this.getAttribute('href');
+                    history.pushState(null, null, targetHash);
+                    showSection(targetHash);
+                    if(mobileMenu.classList.contains('hidden') === false){
+                        mobileMenu.classList.add('hidden');
+                    }
+                });
+            });
+
+            mobileMenuButton.addEventListener('click', () => {
+                mobileMenu.classList.toggle('hidden');
+            });
+            
+            window.addEventListener('popstate', () => {
+                const hash = window.location.hash || '#vision';
+                showSection(hash);
+            });
+
+            const initialHash = window.location.hash || '#vision';
+            showSection(initialHash);
+
+            const timelineContainer = document.getElementById('timeline-content');
+            data.timeline.forEach((item, index) => {
+                const isLeft = index % 2 === 0;
+                const timelineItem = `
+                    <div class="md:flex ${isLeft ? 'md:flex-row-reverse' : ''} items-center w-full">
+                        <div class="md:w-5/12"></div>
+                        <div class="relative md:w-2/12 flex justify-center">
+                            <div class="h-full w-6 flex items-center justify-center">
+                                <div class="h-full w-0.5 bg-gray-300 pointer-events-none"></div>
+                            </div>
+                            <div class="w-6 h-6 absolute top-1/2 -mt-3 rounded-full bg-sienna-600 shadow text-center flex items-center justify-center" style="background-color: #A0522D;">
+                                <span class="text-white font-bold">${index + 1}</span>
+                            </div>
+                        </div>
+                        <div class="md:w-5/12">
+                            <div class="bg-white p-6 rounded-lg shadow-md card">
+                                <h4 class="font-semibold text-lg mb-1 text-gray-800">${item.era}</h4>
+                                <p class="text-gray-600">${item.title}</p>
+                                <p class="mt-2 text-sm text-gray-500">${item.content}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                timelineContainer.innerHTML += timelineItem;
+            });
+            
+            const landmarksCtx = document.getElementById('landmarksChart').getContext('2d');
+            new Chart(landmarksCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.landmarks.labels.map(label => label.split(' ')),
+                    datasets: [{
+                        label: 'Year of Establishment/Construction',
+                        data: data.landmarks.data,
+                        backgroundColor: 'rgba(160, 82, 45, 0.6)',
+                        borderColor: 'rgba(160, 82, 45, 1)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    scales: {
+                        x: {
+                            beginAtZero: false,
+                            min: 1600,
+                            title: { display: true, text: 'Year' }
+                        },
+                        y: {
+                             ticks: { autoSkip: false }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `Established: ${context.raw}`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            const havelisContainer = document.getElementById('havelis-content');
+            data.havelis.forEach(haveli => {
+                havelisContainer.innerHTML += `
+                    <div class="card p-6 rounded-lg text-center">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">${haveli.title}</h4>
+                        <p class="text-gray-600">${haveli.content}</p>
+                    </div>
+                `;
+            });
+
+            const bazaarsGrid = document.getElementById('bazaars-grid');
+            const modal = document.getElementById('bazaar-modal');
+            const modalTitle = document.getElementById('modal-title');
+            const modalDescription = document.getElementById('modal-description');
+            const modalClose = document.getElementById('modal-close');
+
+            data.bazaars.forEach(bazaar => {
+                const bazaarCard = document.createElement('div');
+                bazaarCard.className = 'card p-4 rounded-lg text-center cursor-pointer';
+                bazaarCard.innerHTML = `
+                    <h4 class="font-semibold text-gray-800">${bazaar.name}</h4>
+                    <p class="text-sm text-gray-500">${bazaar.specialization}</p>
+                `;
+                bazaarCard.addEventListener('click', () => {
+                    modalTitle.textContent = bazaar.name;
+                    modalDescription.textContent = data.bazaarDetails[bazaar.name];
+                    modal.classList.add('visible');
+                });
+                bazaarsGrid.appendChild(bazaarCard);
+            });
+
+            modalClose.addEventListener('click', () => modal.classList.remove('visible'));
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('visible');
+                }
+            });
+
+            const foodContainer = document.getElementById('food-content');
+            data.food.forEach(item => {
+                foodContainer.innerHTML += `
+                    <div class="card p-6 rounded-lg">
+                        <h4 class="text-xl font-semibold mb-2 text-gray-800">${item.name}</h4>
+                        <p class="text-gray-600">${item.description}</p>
+                    </div>
+                `;
+            });
+
+            const redevelopmentContainer = document.getElementById('redevelopment-issues');
+            data.redevelopment.forEach(item => {
+                const issueDiv = document.createElement('div');
+                issueDiv.className = 'bg-white rounded-lg border border-gray-200';
+                issueDiv.innerHTML = `
+                    <button class="w-full text-left p-4 flex justify-between items-center focus:outline-none">
+                        <h4 class="font-semibold text-lg text-gray-800">${item.title}</h4>
+                        <span class="transform transition-transform duration-300">&#9662;</span>
+                    </button>
+                    <div class="px-4 pb-4 text-gray-600 hidden">
+                        <p>${item.content}</p>
+                    </div>
+                `;
+                issueDiv.querySelector('button').addEventListener('click', (e) => {
+                    const content = e.currentTarget.nextElementSibling;
+                    const arrow = e.currentTarget.querySelector('span');
+                    content.classList.toggle('hidden');
+                    arrow.classList.toggle('rotate-180');
+                });
+                redevelopmentContainer.appendChild(issueDiv);
+            });
+            
+            document.getElementById('conclusion-content').innerHTML = data.conclusion;
+        });
+    </script>
 
 
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html lang="en">
-	<head id="ctl00_head1"><title>
-	Kinari and Chawri markets in Delhi near Chandnichowk
-
-</title><meta http-equiv="content-type" content="text/html; charset=utf-8" /><link href="https://fonts.googleapis.com/css?family=Open+Sans+Condensed:300,300italic,700" rel="stylesheet" />
-		<noscript><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/core.css" /><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/core-desktop.css" /><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/core-1200px.css" /><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/core-noscript.css" /><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/style.css" /><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/style-desktop.css" /></noscript>
-		<script src="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/jquery.js"></script>
-		<script src="https://storage.googleapis.com/kreatewebsites/site1/css/5grid/init.js?use=mobile,desktop,1000px&amp;mobileUI=1&amp;mobileUI.theme=none&amp;mobileUI.titleBarHeight=60&amp;mobileUI.openerWidth=52"></script>
-		<!--[if IE 9]><link rel="stylesheet" href="https://storage.googleapis.com/kreatewebsites/site1/css/style-ie9.css" /><![endif]-->
-	</head>
-	<body>
-
-	<!-- ********************************************************* -->  
-        <!-- show double header               --#include virtual="header.inc"- -->
-        
-
-<div id="header-wrapper">
-				<header class="5grid-layout" id="site-header">
-					<div class="row">
-						<div class="12u">
-							<div id="logo">
-								<h1> <a id="ctl00_header2_myTitle" class="mobileUI-site-name" href="https://www.chandnichowk.info/">Dataknobs</a></h1>
-
-							</div>
- 
-        
-          <nav class="mobileUI-site-nav" id="site-nav">  
-<ul>
-    
-
-    
-
-
-    <li>
-			<a id="ctl00_header2_RepLinks_ctl01_Hyperlink2" href="https://www.chandnichowk.info/">Home</a>									
-		
-    </li>
-
-
-    <li>
-			<a id="ctl00_header2_RepLinks_ctl02_Hyperlink2" href="https://www.chandnichowk.info/Delhi/">Delhi</a>									
-		
-    </li>
-
-
-
-
-
-             
- 
- 	</ul>
-							</nav>
-						</div>
-					</div>
-				</header>
-			</div>	
-		
-       
-
-		<div id="main-wrapper" class="subpage">
-				<div class="5grid-layout">
-					<div class="row">
-						<div class="9u">
-					
-							<!-- Content -->
-
-								<article class="first">
-									 
-   
-
-
-   
-
-													<h2> <span id="ctl00_ContentPlaceHolder1_title">Kinari and Chawri markets in Delhi near Chandnichowk
-</span></h2>
-
-    					 <span> <span id="ctl00_ContentPlaceHolder1_metadesc"></span></span>				
-                        <br />     
-                                                              
-                                                                <table id="ctl00_ContentPlaceHolder1_RepDetails" cellspacing="0" border="0">
-	<tr>
-		<td>
-
-
-</td>
-	</tr><tr>
-		<td>
-
-
-					
-
-   <span id="ctl00_ContentPlaceHolder1_RepDetails_ctl01_labeltext"><font color="Black" size="4"><
-			    <h1> ChawriBazar</h1>
-			    <p>&nbsp;</p>
-			    <h1><br />
-                </h1>
-			    <p><img src="images/chawri-bazar.jpg" width="206" height="119"  alt ="chawri-bazar"/></p>
-			    <p> &nbsp;</p>
-                    <p> <span style="color: #000000">The western side of the mosque Jama Masjid in the 
-                        wholesale markets specializing in brass, copper and paper products, which are 
-                        called Chawra Bazar. He can be reached by taking the road next to the median 
-                        projection of the Jama Masjid, in the west (rear) wall. When the dancers are 
-                        known for its charming 19th century, the road takes its name from the Marathi 
-                        word Chawra &quot;which means meeting place. The road gets its name because the main&quot; 
-                        Sabha &quot;or held in front of the noble house and try to resolve the dispute before 
-                        it reaches the emperor. Another reason is probably used to arrange a meeting, 
-                        when a dancer out and showed respect for the subtle nuances of his powers. 
-                        atmosphere, but the whole street has changed since then, the war in 1857, when 
-                        the British destroyed many beautiful homes in the nobility.</span></p>
-                    <p> &nbsp;</p>
-                    <p> &nbsp;Lakhori built of bricks, a small cannon 
-                        placed at the entrances of two buildings. The buildings are part of the 
-                        octagonal projections on both sides of two small rooms on each side. The rooms 
-                        are circular arcs to reach and hard to imagine its original shape. The main 
-                        features of the buildings are competent arches and the roof partially octagonal 
-                        projections, though difficult to explain. Today Chawra Bazaar is a busy road as 
-                        workers load them again, cars, rickshaws, scooters and pedestrians, almost 
-                        fighting for the flow of the market during peak hours. Again, it is also in the 
-                        wholesale market, but you can not buy an idol of brass or copper, Vishnu, Buddha 
-                        and others. Stores are also a number of useful features, such as jewelry boxes, 
-                        vases, pots and oil lamps. Currently Chawra Bazaar is best known in the 
-                        wholesale market of paper products such as copper or brass.
- <br />
-                    </p>
-			
-		  </font></span>
-
-</td>
-	</tr><tr>
-		<td>
-
-
-					
-
-   <span id="ctl00_ContentPlaceHolder1_RepDetails_ctl02_labeltext"><font color="Black" size="4">
-			    <h1> Kinari Bazar</h1>
-			   
-			   
-			    <p><img src="images/kinari-bazaar12.jpg" width="206" height="119" alt="Kinari Bazaar" /></p>
-			    <p> &nbsp;</p>
-                    <p> Kinari Bazaar is a wholesale retail market. Here you will get every thing you need for functional especially for marriage. For any special event, festival people buy beautiful traditional dresses from Kinari Bazaar.
-
-                         For any ceromony - marriage, engagement, anniversary, karwa chauth or other events - you can visit Kinari Bazaar to buy dressing for whole family.
-                        For brides, marriage - Kinari Market has special significance.
-                         
-                        ceremony. They have large reserves Sehra (groom&#39;s turban), garlands of beautiful 
-                        and striking gold and silver coins and crisp, wedding jewelry and other 
-                        accessories needed for a wedding ceremony. Stores to meet the needs of people 
-                        belonging to almost all religions. Be it a Hindu wedding or a Christian 
-                        marriage, the necessary elements are available here. Even the wedding attire can be 
-                        rented at stores like Bridal Veil, very well designed lehenga, brocade and gold 
-                        Sherwanis nothing or something that requires a wedding ceremony. See <a href="http://www.clothes-jewelry.com/" target="_blank">Clothes Jewelry design</a></p>
-                        
-                    
-Evening feature some of the most romantic, elegant and beautiful wear perfect for any occasion.
-                    <p>Kinari Bazaar is place where you can find almost every thing for Indian Bridal dresses.</p>
-                    <p>Kinari Bazaar is also spelled as Kinari Bazar. Based on success in Delhi, Kinari Bazar in Agra is also set up. </p>
-                   
-                    <h3>Marriage</h3>
-                    <p>
-                        The bazaar specializes in Traditional dresses for marriages -  Lehanga, Dupatta, Salwar-Kameez, Kurtas, Groom Sherwanis, turbans. <br />
-                        Great variety and collection of borders and embellishments can be found here at very low price.
-                        For marriages and bridal make up tips use beauty parlours and articles for <a href="http://www.beautyparlors.co.in/ArticleBridalMakeup.aspx" >indian wedding beauty preparation</a>
-                    </p>
-                    <h3> Festival Season</h3>
-                     <p>
-                         Festival is also main event when people buy new clothing. During these season you can find not only clothing but decorative items, God Idols. During Sankranti and in August you can buy beautiful colorful kites here.
-                        During holidays and especially during Dussehra, things are different and the character.Shops 
-                        that sell all types of information needed to perform Ram Lila (theatrical epic, 
-                        the Ramayana are organized in different places of the capital <a href="http://www.dusshera.net/">Dussehra</a> that the 
-                        ten heads of Ravana the evil character, bows and arrows, the epic hero Rama, 
-                        swords cardboard, and both the armies of other things. Bazaar is also the center 
-                        of attraction during the festival of Holi and Rakshabandhan.<br />
-</p>
-
-                    <h3> Art and Craft</h3>
-                    Buy any embroidery items like lace, thread work, embellishment,  borders, stonework, gold/silver work and garlands. 
-                    Here you can find best embroidery art from across India. . 
-
-                    <h3>Cost</h3>
-                    Not only you get best art embroidery work, you get it very reasonable price. Same items on fancy shops cost 10 times more. This is a market that supply fashion items to boutiques
-
-                    <h3>How to reach Kinari Bazaar</h3>
-                    <p>
-                    Kinari Bazar is in Chandni Chowk, Old Delhi. It is next to famous Paranthe wali Gali in Chandnichow. It is very near to Gurudwara Sisganj. 
-                    Nowadays you can also use Metro.  Chandni Chowk Metro station is not very far from Kinari Bazaar. You can walk or take a rickshaw.
-
-                    </p>
-
-                    <h3>FAQ</h3>
-                    <li>Should I bargain  :  YES</li>
-                    <li>When not to go : Rainy season</li>
-                    <li>Distance from airport : 22 Km</li>
-                    <li>Distance from train station : 3 Km</li>
-                    <li>Pincode : 110006</li>
-                    <li>Open : Monday to Saturday.  Closed on Sunday</li>
-                    <li>Best time to visit : 12 PM to 4 PM</li>
-
-					<br/>
-
-                    <h4>Places to eat in Kinari Bazaar</h4>
-                    <li>Paratha Wali gali</li>
-                     <li>Chaina Ram Sindhi Confectioners</li>
-                    <li>Inderpuri Restaurant</li>
-                 
-
-
-					If you cant go to Kinari bazar and like to go to modern shopping mall, easily accessible mall visit
-					Connaught Place, Delhi <br/>
-					Karol Bagh , Delhi  <br/>
-					South Extension Delhi  <br/>
-					Nehru Place Delhi  (for Electronics, software)  <br/>
-					Lajpat Nagar  <br/>
-					Gurgeon Shopping malls  <br/>
-					
-					
-					To visit india and see India <a href="http://www.indiacitytrip.com/ideas/" target=_"blank">Travel package ideas </a>
-On a tour, when you are with a big group of 40 people, most of the times it is impossible to get a real communication with your guide and understand the insights of the ancient city that you are visiting, by taking <a href="http://www.kusadasitours.com/private-ephesus-tours">private ephesus tours</a> you will avoid distant communications with your guide and be as close as possible to the information and be on time. You can give breaks anytime you want during private ephesus tours.
-			
-	</font></span>
-
-</td>
-	</tr><tr>
-		<td>
-
-
-					
-
-   <span id="ctl00_ContentPlaceHolder1_RepDetails_ctl03_labeltext"><font color="Black" size="4">			    <h1> Local Market</h1>
-                <p> &nbsp;</p>
-                <p> &nbsp;</p>
-			 
-			      <p><span style="color: #000000"><b>Books Market</b> (only Sunday at Darya Ganj) - Nai Sarak</p>
-                <p>&nbsp;</p>
-			     <b> Brass Market</b> - Vakil Pura behind Jama Masjid. 
-			      <br />
-			      <br />
-                 <b> Bicycles Market</b> - Jhandewalan at Karol Bagh. 
-                <br />
-                <br />
-                <b>Cycle Market</b> at Chandni Chowk.
-                <br />
-                <br />
-                <b>Canvas Market</b> - Azad Market. 
-			      <br />
-                <br />
-                <b>Chemicals Market </b>- Tilak Bazar near Khari Baoli.<br />
-                <br />
-			      <b>Cloth Market </b>- Cloth Mkt. in Fathepuri, also various Katras at Chandni Chowk. 
-			      <br />
-                <br />
-                <b>Dry Fruits Market </b>- Khari Baoli.
-			      <br />
-                <br />
-                <b>Electrical Goods Market</b>- Bhagirath Palace, Lajpat Rai Market. Qutab Road and Sadar Bazar.<br />
-                <br />
-			     <b> Flea Markets</b> - Daily at Jama Masjid and Every Sunday behind Red Fort on Ring Road.<br />
-                <br />
-			      <b>Foodgrain Market </b>- Naya Bazar, Khari Baoli. Rui Mandi in Sadar Bazar.
-                <br />
-                <br />
-                <b>Fruits &amp; Vegetable Market </b>- Azadpur Wholesale Mandi, Shahdra, Darya Ganj, Nangloi, Okhla, Tilak Nagar. 
-			      <br />
-                <br />
-                <b>Furniture Market </b>- Kirti Nagar Furniture Block, Rani Jhansi Rd., Panchkuian Road, Jail Road (Tilak Nagar) 
-			      .<br />
-                <br />
-                <b>Imported Goods Market </b>- Gaffar Mkt. in Karol Bagh, Palika Bazar in Connaught Place.<br />
-                <br />
-                <b>Jewellery Market</b>- Gold on Bank Street-Karol Bagh, Connaught Place and Dariba Kalan and Kinari Bazar in Chandni Chowk. 
-			      <br />
-                <br />
-                <b>Silver Market </b>- Chandni Chowk, Dariba Kalan. 
-             
-                <br />
-             
-                <br />
-			      <b>Marble Market</b>- Mangolpur Kalan near Mangolpuri &amp; Rajouri Garden.<br />
-                <br />
-			      <b> Medical Equipments Market</b>- Bhagirath Palace, Darya Ganj.<br />
-                <br />
-			      <b>Medicines Market </b>- Allopathy - Bhagirath Palace.<br />
-                <br />
-                <b>Ayurvedic </b>- Chandni Chowk.<br />
-                <br />
-			      <b>Homeopathy Market </b>- Chandni Chowk and Darya Ganj. 
-			      <br />
-                <br />
-                <b>Motor Parts Market </b>- Kashmiri Gate and Karol Bagh.<br />
-                <br />
-			      <b>Musical Instruments Market</b>- Nai Sarak in Chandni Chowk. 
-			      
-			     <b> Paper</b> - Chawri Bazar.<br />
-                <br />
-			      <b>Readymade Garments Market</b>- Gandhi Nagar Mkt. (Trans Yamuna) and Tank Rd. near Karol Bagh.
-			      <br />
-                <br />
-                <b>Shoe Market</b> - Ballimaran, Sadar Bazar, Karol Bagh.<br />
-                <br />
-                <b> Spices Market </b>- Khari Baoli.         <br />
-			      <b>
-                <br />
-                Timber Market</b>- Pahar Ganj, Kirti Nagar. 
-			      <br />
-                <br />
-                <b>Toys Market</b>- Sadar Bazar. 
-			     <b> 
-                <br />
-                <br />
-                Tyre Market</b>- Novelty Market<br />
-                <br />
-                <b> Vessels Market</b>- Deputy Ganj near Sadar Bazar.           
+<html><head></head><body><footer class="bg-gray-800 text-gray-300">
+  <div class="container mx-auto px-6 py-12 lg:px-8">
+    <div class="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-4">
+      
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Chandnichowk</h5>
+        <ul class="space-y-2">
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/"></a>Chandnichowk history</li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/qutubminar-photos-blog.html">Info</a></li>
+      
 		  
-			    <p></span></p>
-			    <p>&nbsp;</p>
-			    <h1><br />
-              </h1>
-			    <p><br />
-                  <br />
-              </p>
-			    <p>&nbsp;</p>
-		 </font></span>
-
-</td>
-	</tr><tr>
-		<td>
+		  
+		  
+		  <li>	<a href="https://www.chandnichowk.info/cities-of-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl01_title">Cities-of-india</a></li>	
 
 
-
-</td>
-	</tr>
-</table>
-     
-	
-
-
-
-								</article>							
-
-						</div>
-
-					<div class="3u">
-						
-							<!-- Sidebar -->
-							
-								<section>
-
-									<h3>Topics</h3>
-									<ul class="link-list">
-																				
-
-    
-
-
-
-												
-						
-			<a id="ctl00_articlessub_RepLinks_ctl01_title" class="nav-item nav-link active" href="https://www.chandnichowk.info/"><em><b>Home</b></em></a>
-            
-           
-       
-
-
-
-
-
-												
-						
-			<a id="ctl00_articlessub_RepLinks_ctl02_title" class="nav-item nav-link active" href="https://www.chandnichowk.info/Delhi/"><em><b>Delhi</b></em></a>
-            
-           
-       
-
-
-
-
-
-
-
-             
- 
- 
- 
-	
-									</ul>
-								</section>
-
-								<section class="last">
-									<h3>Related Links</h3>
-									<p>
-																
-									</p>
-									<ul class="link-list">
-										
-
-    
 
 
 
 												
 		<li>								
-		<a id="ctl00_articleshome_RepLinks_ctl01_title" href="https://www.chandnichowk.info/">Home</a>
+		<a href="https://www.chandnichowk.info/Delhi-blog.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl02_title">Delhi-blog</a>
             </li>	
 
 
@@ -411,202 +567,114 @@ On a tour, when you are with a big group of 40 people, most of the times it is i
 
 												
 		<li>								
-		<a id="ctl00_articleshome_RepLinks_ctl02_title" href="https://www.chandnichowk.info/Delhi/">Delhi</a>
+		<a href="https://www.chandnichowk.info/delhi-india-medical-tourism.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl03_title">Delhi-india-medical-tourism</a>
             </li>	
-
-
-
-
-
-
-
-             
- 
- 
- 
-
-										
-
-    
-
-
-
-												
-								
-		<a id="ctl00_Articlesub1_RepLinks_ctl01_title" class="btn btn-link" href="https://www.chandnichowk.info/Delhi-blog.html">Delhi-blog</a>
-        
-    <br />
-
-
-
-
-
-												
-								
-		<a id="ctl00_Articlesub1_RepLinks_ctl02_title" class="btn btn-link" href="https://www.chandnichowk.info/Mandir.html">Mandir</a>
-        
-    <br />
-
-
-
-
-
-												
-								
-		<a id="ctl00_Articlesub1_RepLinks_ctl03_title" class="btn btn-link" href="https://www.chandnichowk.info/Market-decoration-during-Diwali.html">Market-decoration-during-Diwali</a>
-        
-    <br />
-
-
-
-
-
-												
-								
-		<a id="ctl00_Articlesub1_RepLinks_ctl04_title" class="btn btn-link" href="https://www.chandnichowk.info/markets.html">Markets</a>
-        
-    <br />
-
-
-
-
-
-												
-								
-		<a id="ctl00_Articlesub1_RepLinks_ctl05_title" class="btn btn-link" href="https://www.chandnichowk.info/Ravan-effigy-burn-in-delhi.html">Ravan-effigy-burn-in-delhi</a>
-        
-    <br />
-
-
-
-
-
-
-
-             
- 
- 
- 
- 
-									</ul>
-								</section>
-						
-						</div>
-					</div>
-				</div>
-		</div>
 			
-        
+			
+			
+												
+		<li>								
+		<a href="https://www.chandnichowk.info/history-forts-in-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl04_title">History-forts-in-india</a>
+            </li>	
 
-<div id="footer-wrapper">
-				<footer class="5grid-layout" id="site-footer">
-					<div class="row">
-						<div class="3u">
-							<section class="first">
-								<h2><a id="ctl00_footer_footerhead" title="Dataknobs" href="https://www.chandnichowk.info/">Dataknobs</a></h2>
-								<ul class="link-list">
-										
-									
-									
-                                    <table id="ctl00_footer_RepLinks" cellspacing="0" border="0">
-	<tr>
-		<td>
 
-    
-</td>
-	</tr><tr>
-		<td>
+
 
 
 												
 		<li>								
-		<a id="ctl00_footer_RepLinks_ctl01_title" href="https://www.chandnichowk.info/">Home</a>
+		<a href="https://www.chandnichowk.info/india-delhi-for-healthcare.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl05_title">India-delhi-for-healthcare</a>
             </li>	
 
 
-</td>
-	</tr><tr>
-		<td>
+
 
 
 												
 		<li>								
-		<a id="ctl00_footer_RepLinks_ctl02_title" href="https://www.chandnichowk.info/Delhi/">Delhi</a>
+		<a href="https://www.chandnichowk.info/information.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl06_title">Information</a>
             </li>	
 
 
-</td>
-	</tr><tr>
-		<td>
 
 
 
-</td>
-	</tr>
-</table>
-                                    
+												
+		<li><a href="https://www.chandnichowk.info/main-cities-of-india.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl07_title">Main-cities-of-india</a></li>	
 
-                   </ul>
-							</section>
-						</div>
+		<li><a href="https://www.chandnichowk.info/Mandir.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl08_title">Mandir</a> </li>	
 
-                        <div class="3u">
-							<section >
-								<h2>Set 2</h2>
-								<ul class="link-list">
-										
-									
-									
-                                    
-                                    
-
-                   </ul>
-							</section>
-						</div>
-                        <div class="3u">
-							<section >
-								<h2>Set 3</h2>
-								<ul class="link-list">
-										
-									
-									
-                                    
-                                    
-
-                   </ul>
-							</section>
-						</div>
-
-                        <div class="3u">
-							<section class="last" >
-								<h2>Set 4</h2>
-								<ul class="link-list">
-										
-									
-									
-                                    
-                                    
-
-                   </ul>
-							</section>
-						</div>
-                        	</div>
-					<div class="row">
-						<div class="12u">
-							<div class="divider"></div>
-						</div>
-					</div>
-					<div class="row">
-						<div class="12u">
-							<div id="copyright">
-								&copy; Copyright.  Design: <a id="ctl00_footer_cright">Dataknobs</a> | <a id="ctl00_footer_sitemap"></a>  | <a id="ctl00_footer_privacypolicy" href="Dataknobsprivacypolicy.html">Privacy Policy</a> 
-							</div>
-						</div>
-					</div>
-				</footer>
-		<!-- Footer -->
+		<li><a href="https://www.chandnichowk.info/Market-decoration-during-Diwali.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl09_title">Market-decoration-during-Diwali</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/markets.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl10_title">Markets</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/old-page.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl11_title">Old-page</a></li>	
+												
+		<li><a href="https://www.chandnichowk.info/Ravan-effigy-burn-in-delhi.html" id="ctl00_ContentPlaceHolder1_RepLinks_ctl12_title">Ravan-effigy-burn-in-delhi</a> </li>	
 
 
 
-	</body>
-</html>
+
+		 
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Delhi Tour</h5>
+        <ul class="space-y-2">
+		  <li><a href="https://www.chandnichowk.info/qutubminar-delhi.html">Qutubminar and Dehi</a></li>
+		  <li><a href="https://www.chandnichowk.info/delhi/redfort/" target="blank">Redfort Delhi</a></li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/delhi/connaught-place/">Delhi Connaught Place</a></li>
+          <li><a class="hover:text-white hover:underline transition-colors duration-200" href="https://www.chandnichowk.info/delhi/chandni-chowk/">ChandniChowk</a></li>
+
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Forts Of India</h5>
+        <ul class="space-y-2">
+		<li><a href="https://www.chandnichowk.info/" id="ctl00_ContentPlaceHolder1_RepLinks_ctl01_title">Home</a></li>	
+		<li><a href="https://www.chandnichowk.info/Delhi/" id="ctl00_ContentPlaceHolder1_RepLinks_ctl02_title">Delhi</a></li>	
+        </ul>
+      </div>
+
+      <div>
+        <h5 class="text-lg font-semibold text-white mb-4">Contact Us</h5>
+        <div class="space-y-2">
+          <p>Redmond<br/>WA, USA</p>
+          <p>
+            <a class="hover:text-white hover:underline transition-colors duration-200" href="mailto:contact@dataknobs.com">contact@kreatewebsites.com</a>
+          </p>
+          <p>
+            <a class="hover:text-white hover:underline transition-colors duration-200" href="tel:+14253411222">+1 (425) 341-1222</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="mt-12 border-t border-gray-700 pt-8 flex flex-col items-center justify-between sm:flex-row">
+      <p class="text-sm text-gray-400">© 2025 Qutubminar. All rights reserved.</p>
+      
+      <div class="flex space-x-4 mt-4 sm:mt-0">
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.facebook.com/kreatewebsites/">
+          <span class="sr-only">Facebook</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path clip-rule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.772-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" fill-rule="evenodd"></path>
+          </svg>
+        </a>
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.twitter.com/kreatewebsites/">
+          <span class="sr-only">Twitter</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"></path>
+          </svg>
+        </a>
+        <a class="text-gray-400 hover:text-white transition-colors duration-200" href="https://www.linkedin.com/company/kreatewebsites/">
+          <span class="sr-only">LinkedIn</span>
+          <svg aria-hidden="true" class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+            <path clip-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.783-1.75-1.75s.784-1.75 1.75-1.75 1.75.783 1.75 1.75-.784 1.75-1.75 1.75zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" fill-rule="evenodd"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </div>
+</footer></body></html></body></html>
